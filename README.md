@@ -2,7 +2,7 @@
 
 Repository of bash plugins.
 
-These plugins are complementary to my friend @Kyrex23's repository: [Here](https://github.com/kyrex23/dotfiles) you can find information to install a pack of utilities.
+These plugins are complementary to my friend [@Kyrex23](https://github.com/kyrex23)'s repository: [Here](https://github.com/kyrex23/dotfiles) you can find information to install a pack of utilities.
 
 # Installation
 
