@@ -27,6 +27,7 @@
 ¡setupstream_push() {
     local branch=$(__actual_branch__)
     git push -u origin $branch
+    ¡setupstream_branch
     echo "Set upstream to origin/$branch"
 }
 
