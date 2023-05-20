@@ -22,7 +22,7 @@ git clone https://github.com/Javi3Code/My_Shell_scripts.git
 ```bash
    find ~/dev-tools/projects/shell_scripts -name "*.sh" | while read file; do
         ln -s $file -t $ZDOTDIR
-        echo "agregate symbolic link:\n ${target}\nto:\n${ZDOTDIR}"
+        echo -e "agregate symbolic link:\n ${target}\nto:\n${ZDOTDIR}"
     done;
 ```
 Now you can use the new commands.
