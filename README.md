@@ -27,6 +27,13 @@ git clone https://github.com/Javi3Code/My_Shell_scripts.git
 ```
 Now you can use the new commands.
 
+## ⚠️ Warning
+
+- my_generic_fc_sh uses these variables: *** You can overrite it if it's necessary
+   -  MY_GH_REPO_DIR=~/dev-tools/projects
+      MY_SH_DIR=$MY_GH_REPO_DIR/shell_scripts
+      MY_DOWNLOADS_DIR=~/Descargas
+
 # Additional Info
 
 ## Generic features
