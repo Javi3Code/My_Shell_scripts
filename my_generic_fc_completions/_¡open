@@ -8,5 +8,6 @@ _arguments \
     "(--zshrc)"--zshrc'[zshrc file]' \
     "(--generics)"--generics'[my_generic_fc file]' \
     "(--gits)"--gits'[git_utils file]' \
+    "(--with=)"--with='[program selected to open files or directory | default --> code (vscode)]':_:_command_names \
     "*"-d'[directory flag]:_:_directories' \
     "*"-f'[file flag]:_:_files'

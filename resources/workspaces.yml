@@ -1,0 +1,32 @@
+workspaces:
+- name: --shell
+  short-name: -sh
+  description: Workspace for working on shell plugins, bash scripting
+  path: $MY_SH_DIR
+  env: code
+  env-aux:
+  - command: google-chrome
+    resources:
+    - https://chat.openai.com/
+    - https://github.com/Javi3Code/dotfiles/pulls
+    - https://github.com/zsh-users/zsh-completions/tree/master
+- name: --springboot-samples
+  short-name: -sps
+  description: Workspace for working on test springboot projects
+  path: $MY_GH_REPO_DIR/projects/springboot-samples
+  env: idea
+  env-aux:
+  - command: google-chrome
+    resources:
+    - https://chat.openai.com/
+    - https://github.com/Javi3Code/springboot-samples/pulls
+- name: --new-workspace
+  short-name: -nw
+  description: aaaa
+  path: /path/to/new/workspace
+  env: code
+- name: a
+  short-name: a
+  description: a
+  path: a
+  env: a

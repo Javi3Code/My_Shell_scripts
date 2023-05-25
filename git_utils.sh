@@ -5,15 +5,6 @@
 # Author: Javi3Code
 # Date: Saturday May 20, 2023
 #
-
-¡nav() {
-
-    if [ "$2" = "-p" ]; then
-        ¡pull
-    fi
-    git status
-}
-
 ¡emptycommit() {
     git commit --allow-empty -m "$@"
 }

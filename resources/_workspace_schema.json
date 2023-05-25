@@ -1,0 +1,59 @@
+{
+    "type": "object",
+    "properties": {
+        "workspaces": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "short-name": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "path": {
+                        "type": "string"
+                    },
+                    "env": {
+                        "type": "string"
+                    },
+                    "env-aux": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "command": {
+                                    "type": "string"
+                                },
+                                "resources": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "required": [
+                                "command",
+                                "resources"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "name",
+                    "short-name",
+                    "description",
+                    "path",
+                    "env"
+                ]
+            }
+        }
+    },
+    "required": [
+        "workspaces"
+    ]
+}
