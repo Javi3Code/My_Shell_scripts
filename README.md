@@ -20,10 +20,10 @@ git clone https://github.com/Javi3Code/My_Shell_scripts.git
 
 - Create symbolic links in the directory created by kyrex23/dotfiles installation
 ```bash
-   find ~/dev-tools/projects/shell_scripts -name "*.sh" | while read file; do
-        ln -s $file -t $ZDOTDIR
-        echo "agregate symbolic link:\n ${target}\nto:\n${ZDOTDIR}"
-    done;
+    while IFS= read -r file; do
+        ln -s "$file" -t "$ZDOTDIR"
+        echo -e "agregate symbolic link:\n$file\nto:\n$ZDOTDIR"
+    done <<< "$(find "$MY_SH_DIR" -name "*.sh")"
 ```
 Now you can use the new commands.
 
