@@ -1,0 +1,10 @@
+#compdef ¡zZmv
+#
+# Description: Completion script for ¡zZmv @see(../my_generc_fc.sh).
+# Author: Javi3Code
+# Date: Monday May 15, 2023
+#
+_arguments \
+    "(-t)"-t'[target directory]:next arg:($MY_DOWNLOADS_DIR $MY_GH_REPO_DIR)' \
+    "(-o)"-o'[source directory]:next arg:($MY_DOWNLOADS_DIR $MY_GH_REPO_DIR)' \
+    "(-f)"-f'[zip filename]:filename:_files'
