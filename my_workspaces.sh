@@ -21,13 +21,40 @@ MY_WORKSPACES_SRC=$MY_SH_DIR/resources/workspaces.yml
 #     Returns:
 #         None
 ws_register() {
-    local new_workspace=$(__ws_register_interactive | tail -n 1)
+    local new_workspace='.workspaces += '$(__ws_register_interactive | tail -n 1)
     local workspaces_backup=$MY_SH_DIR/resources/workspaces-backup.yml
     cp $MY_WORKSPACES_SRC $workspaces_backup &&
         yq eval -i $new_workspace "$workspaces_backup" &&
         __validate_workspace $workspaces_backup &&
         yq eval -i $new_workspace "$MY_WORKSPACES_SRC"
     rm $workspaces_backup
+}
+
+# ws_edit: Edits properties of a workspace with the specified short name in the MY_WORKSPACES_SRC file.
+#     Searches for the workspace with the provided short name in the workspaces list and allows the user to edit its
+# properties interactively.
+#     The updated workspace is saved back to the MY_WORKSPACES_SRC file.
+#     Arguments:
+#         $1: Short name of the workspace to edit
+#     Returns:
+#         None
+ws_edit() {
+    local short_name="$1"
+    local workspace_index=$(yq eval '.workspaces | map(.["short-name"]) | index("'"$short_name"'")' $MY_WORKSPACES_SRC)
+    echo $workspace_index
+    if [[ "$workspace_index" == "null" ]]; then
+        echo "Error: Workspace with short name '$short_name' does not exist."
+        return 1
+    fi
+    local workspace_path=".workspaces[$workspace_index]"
+    local updated_workspace=$(__ws_update_interactive "$short_name")
+    local workspaces_backup=$MY_SH_DIR/resources/workspaces-backup.yml
+    cp $MY_WORKSPACES_SRC $workspaces_backup &&
+        yq eval -i "$updated_workspace" "$workspaces_backup" &&
+        __validate_workspace $workspaces_backup &&
+        yq eval -i "$updated_workspace" "$MY_WORKSPACES_SRC"
+    rm $workspaces_backup
+    echo "Workspace properties updated successfully."
 }
 
 # ws_delete: Deletes a workspace with the specified short name from the MY_WORKSPACES_SRC file.
@@ -48,9 +75,9 @@ ws_delete() {
 #         None
 ws_show() {
     case $1 in
-    --all) yq eval '.' $MY_WORKSPACES_SRC | envsubst ;;
-    --keys) yq eval '.workspaces[] | { "name": .name, short-name: .short-name, "description": .description }' $MY_WORKSPACES_SRC ;;
-    --key=*) yq eval '.workspaces[] | select(.["short-name"] == "'"${1#*=}"'")' $MY_WORKSPACES_SRC | envsubst ;;
+    --all) yq -C -P eval '.' $MY_WORKSPACES_SRC | envsubst ;;
+    --keys) yq -C -P eval '.workspaces[] | { "name": .name, short-name: .short-name, "description": .description }' $MY_WORKSPACES_SRC ;;
+    --key=*) yq -C -P eval '.workspaces[] | select(.["short-name"] == "'"${1#*=}"'")' $MY_WORKSPACES_SRC | envsubst ;;
     esac
 }
 
@@ -81,8 +108,8 @@ __ws_register_interactive() {
     read "name?Name: "
     read "short_name?Short Name: "
     read "description?Description: "
-    read "parentdir?Directory path: "
-    read "ide?Runtime environment: "
+    read "parentdir?Directory path (Insert '.' if none required): "
+    read "ide?Runtime environment (Insert '.' if none required): "
 
     local new_workspace='
     {
@@ -92,8 +119,62 @@ __ws_register_interactive() {
         "path": "'"$parentdir"'",
         "env": "'"$ide"'"
     }'
-    read "add_env_aux?Do you want to add optional env-aux fields? (Y/N): "
+    new_workspace=$(jq -c '.' <<<$(__ws_add_env_aux_interactive $new_workspace))
+    echo $new_workspace
+}
 
+# __ws_update_interactive: Prompts the user to update properties of a workspace interactively.
+#     Takes the short name of the workspace as input.
+#     Retrieves the index and path of the workspace in the MY_WORKSPACES_SRC file.
+#     Displays the current values of the workspace properties.
+#     Asks the user to provide new values for each property, allowing them to keep the same value by pressing Enter.
+#     Constructs a JSON representation of the updated workspace based on user input.
+#     Calls the "__ws_parse_new_val" function to parse the new values, considering the previous values.
+#     Calls the "__ws_add_env_aux_interactive" function to add optional env-aux fields to the updated workspace.
+#     Returns the JSON representation of the updated workspace.
+#     Arguments:
+#         $1: Short name of the workspace to update
+#     Returns:
+#         JSON representation of the updated workspace
+__ws_update_interactive() {
+    local short_name="$1"
+    local workspace_path=".workspaces[$workspace_index]"
+    echo "Edit properties for workspace '$short_name': "
+    local name=$(yq eval "$workspace_path.name" $MY_WORKSPACES_SRC)
+    read "new_name?Name [$name] (Press enter if you want to keep it the same): "
+    local shortname=$(yq eval "$workspace_path["short-name"]" $MY_WORKSPACES_SRC)
+    read "new_short_name?Short-Name [$shortname] (Press enter if you want to keep it the same): "
+    local description=$(yq eval "$workspace_path.description" $MY_WORKSPACES_SRC)
+    read "new_description?Description [$description] (Press enter if you want to keep it the same): "
+    local parentdir=$(yq eval "$workspace_path.path" $MY_WORKSPACES_SRC)
+    read "new_parentdir?Directory path [$parentdir] (Insert '.' if none required or press enter if you want to keep it the same): "
+    local ide=$(yq eval "$workspace_path.env" $MY_WORKSPACES_SRC)
+    read "new_ide?Runtime environment [$ide] (Insert '.' if none required or press enter if you want to keep it the same): "
+    local updated_workspace='
+    {
+        "name": "'"$(__ws_parse_new_val $name $new_name)"'",
+        "short-name": "'"$(__ws_parse_new_val $shortname $new_short_name)"'",
+        "description": "'"$(__ws_parse_new_val $description $new_description)"'",
+        "path": "'"$(__ws_parse_new_val $parentdir $new_parentdir)"'",
+        "env": "'"$(__ws_parse_new_val $ide $new_ide)"'"
+    }'
+    updated_workspace=$(jq -c '.' <<<$(__ws_add_env_aux_interactive $updated_workspace))
+    echo $updated_workspace
+}
+
+# __ws_add_env_aux_interactive: Prompts the user to add optional env-aux fields to a workspace interactively.
+#     Asks the user if they want to add optional env-aux fields.
+#     If the user confirms, it guides them through a series of prompts to provide the command and resources for each
+# env-aux field.
+#     Constructs a JSON representation of the env-aux fields based on user input.
+#     Adds the constructed env-aux fields to the provided workspace JSON.
+#     Arguments:
+#         $1: JSON representation of the workspace to update
+#     Returns:
+#         JSON representation of the updated workspace with added env-aux fields
+__ws_add_env_aux_interactive() {
+    read "add_env_aux?Do you want to add optional env-aux fields? (Y/N): "
+    local new_workspace=$1
     if [[ "$add_env_aux" =~ ^[Yy]$ ]]; then
         while true; do
             read "executor?Command: "
@@ -113,6 +194,20 @@ __ws_register_interactive() {
             fi
         done
     fi
-    new_workspace=$(jq -c '.' <<<$new_workspace)
-    echo '.workspaces +=' $new_workspace
+    echo $new_workspace
+}
+
+# __ws_parse_new_val: Parses the new value for a property, considering the previous value.
+#     If the new value is an empty string, it echoes the previous value.
+#     Arguments:
+#         $1: Previous value of the property
+#         $2: New value of the property
+#     Returns:
+#         value
+__ws_parse_new_val() {
+    if [[ -z "$2" ]]; then
+        echo "$1"
+    else
+        echo "$2"
+    fi
 }

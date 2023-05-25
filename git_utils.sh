@@ -6,7 +6,7 @@
 # Date: Saturday May 20, 2023
 #
 ¡emptycommit() {
-    git commit --allow-empty -m "$@"
+    git commit --allow-empty -m "$*"
 }
 
 ¡setupstream_branch() {
