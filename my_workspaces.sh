@@ -21,7 +21,8 @@ MY_WORKSPACES_SRC=$MY_SH_DIR/resources/workspaces.yml
 #     Returns:
 #         None
 ws_register() {
-    local new_workspace='.workspaces += '$(__ws_register_interactive | tail -n 1)
+    echo "Register new workspace:"
+    local new_workspace='.workspaces += '$(__ws_register_interactive)
     local workspaces_backup=$MY_SH_DIR/resources/workspaces-backup.yml
     cp $MY_WORKSPACES_SRC $workspaces_backup &&
         yq eval -i $new_workspace "$workspaces_backup" &&
@@ -40,21 +41,21 @@ ws_register() {
 #         None
 ws_edit() {
     local short_name="$1"
-    local workspace_index=$(yq eval '.workspaces | map(.["short-name"]) | index("'"$short_name"'")' $MY_WORKSPACES_SRC)
-    echo $workspace_index
+    local workspace_index=$(yq eval '.workspaces[] | select(.["short-name"] == "'"$short_name"'") | key' $MY_WORKSPACES_SRC)
     if [[ "$workspace_index" == "null" ]]; then
         echo "Error: Workspace with short name '$short_name' does not exist."
         return 1
     fi
-    local workspace_path=".workspaces[$workspace_index]"
+    echo "Edit properties for workspace with shortname -> $short_name"
     local updated_workspace=$(__ws_update_interactive "$short_name")
+    updated_workspace='.workspaces["'"$workspace_index"'"] = '$updated_workspace
+    echo -e ${updaded_workspace}
     local workspaces_backup=$MY_SH_DIR/resources/workspaces-backup.yml
     cp $MY_WORKSPACES_SRC $workspaces_backup &&
-        yq eval -i "$updated_workspace" "$workspaces_backup" &&
+        yq eval -i $updated_workspace "$workspaces_backup" &&
         __validate_workspace $workspaces_backup &&
-        yq eval -i "$updated_workspace" "$MY_WORKSPACES_SRC"
+        yq eval -i $updated_workspace "$MY_WORKSPACES_SRC"
     rm $workspaces_backup
-    echo "Workspace properties updated successfully."
 }
 
 # ws_delete: Deletes a workspace with the specified short name from the MY_WORKSPACES_SRC file.
@@ -103,8 +104,6 @@ __validate_workspace() {
 #     Returns:
 #         JSON representation of the new workspace
 __ws_register_interactive() {
-
-    echo "Register new workspace:"
     read "name?Name: "
     read "short_name?Short Name: "
     read "description?Description: "
@@ -139,11 +138,9 @@ __ws_register_interactive() {
 __ws_update_interactive() {
     local short_name="$1"
     local workspace_path=".workspaces[$workspace_index]"
-    echo "Edit properties for workspace '$short_name': "
     local name=$(yq eval "$workspace_path.name" $MY_WORKSPACES_SRC)
     read "new_name?Name [$name] (Press enter if you want to keep it the same): "
-    local shortname=$(yq eval "$workspace_path["short-name"]" $MY_WORKSPACES_SRC)
-    read "new_short_name?Short-Name [$shortname] (Press enter if you want to keep it the same): "
+    read "new_short_name?Short-Name [$short_name] (Press enter if you want to keep it the same): "
     local description=$(yq eval "$workspace_path.description" $MY_WORKSPACES_SRC)
     read "new_description?Description [$description] (Press enter if you want to keep it the same): "
     local parentdir=$(yq eval "$workspace_path.path" $MY_WORKSPACES_SRC)

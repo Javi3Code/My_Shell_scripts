@@ -2,4 +2,4 @@ _mvn
 _hide.sh
 .idea
 .vscode
-resources\workspaces.yml
+resources/workspaces.yml
