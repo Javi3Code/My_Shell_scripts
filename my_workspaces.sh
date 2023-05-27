@@ -1,4 +1,5 @@
 #!/bin/bash
+# In_Readme: Workspaces Tool
 #
 # Title: Useful functions to manage dynamic-workspaces
 # Author: Javi3Code
@@ -11,7 +12,7 @@ MY_WORKSPACES_SRC=$MY_SH_DIR/resources/workspaces.yml
 
 #=======================================================================================================================
 
-# ws_register: Registers a new workspace based on interactive user input.
+# *pb*ws_register: Registers a new workspace based on interactive user input.**
 #     Reads input from the user for workspace details such as name, short name, description, directory path, and runtime environment.
 #     Offers the option to add optional env-aux fields, including command and resources.
 #     The new workspace is added to the existing workspaces list in the MY_WORKSPACES_SRC file.
@@ -31,7 +32,7 @@ ws_register() {
     rm $workspaces_backup
 }
 
-# ws_edit: Edits properties of a workspace with the specified short name in the MY_WORKSPACES_SRC file.
+# *pb*ws_edit: Edits properties of a workspace with the specified short name in the MY_WORKSPACES_SRC file.**
 #     Searches for the workspace with the provided short name in the workspaces list and allows the user to edit its
 # properties interactively.
 #     The updated workspace is saved back to the MY_WORKSPACES_SRC file.
@@ -41,11 +42,7 @@ ws_register() {
 #         None
 ws_edit() {
     local short_name="$1"
-    local workspace_index=$(yq eval '.workspaces[] | select(.["short-name"] == "'"$short_name"'") | key' $MY_WORKSPACES_SRC)
-    if [[ "$workspace_index" == "null" ]]; then
-        echo "Error: Workspace with short name '$short_name' does not exist."
-        return 1
-    fi
+    local workspace_index=$(__ws_get_index $short_name)
     echo "Edit properties for workspace with shortname -> $short_name"
     local updated_workspace=$(__ws_update_interactive "$short_name")
     updated_workspace='.workspaces["'"$workspace_index"'"] = '$updated_workspace
@@ -58,17 +55,69 @@ ws_edit() {
     rm $workspaces_backup
 }
 
-# ws_delete: Deletes a workspace with the specified short name from the MY_WORKSPACES_SRC file.
+# *pb*ws_delete: Deletes a workspace with the specified short name from the MY_WORKSPACES_SRC file.**
 #     Searches for the workspace with the provided short name in the workspaces list and removes it.
 #     Arguments:
 #         $1: Short name of the workspace to delete
 #     Returns:
 #         None
 ws_delete() {
-    yq eval -i 'del(.workspaces[] | select(.["short-name"] == "'"$1"'"))' $MY_WORKSPACES_SRC
+    yq eval -i 'del(.workspaces['"$(__ws_get_index $1)"'])' $MY_WORKSPACES_SRC
 }
 
-# ws_show: Displays information about workspaces based on the provided command-line options.
+# *pb*ws_env_aux_delete: Deletes a specific env-aux or resource from a workspace.**
+#     Takes the workspace short name, env-aux command, and flag (--all, --show) as arguments.
+#     If the flag is "--all", deletes the entire env-aux for the specified workspace.
+#     If the flag is "--show", displays all the resources for the specified env-aux and allows the user to select and delete resources interactively.
+#     Arguments:
+#         $1: Short name of the workspace
+#         $2: Env-aux command
+#         $3: Flag (--all or --show)
+#     Returns:
+#         None
+ws_env_aux_delete() {
+    local short_name="$1"
+    local command="$2"
+    local flag="$3"
+    local workspace_index=$(__ws_get_index $short_name)
+    local workspace_path=".workspaces[$workspace_index]"
+
+    if [[ "$flag" == "--all" ]]; then
+        yq eval -i 'del('"$workspace_path"'["env-aux"][] | select(.command == "'"$command"'"))' $MY_WORKSPACES_SRC
+        echo "Entire env-aux '$command' deleted successfully from workspace '$short_name'."
+    elif [[ "$flag" == "--show" ]]; then
+        local resources=$(yq eval ''"$workspace_path"'["env-aux"][] | select(.command == "'"$command"'").resources | .[]' $MY_WORKSPACES_SRC)
+        local selected_resources=()
+        local resource
+
+        echo "Resources for env-aux '$command' in workspace '$short_name':"
+        for resource in $resources; do
+            echo "- $resource"
+        done
+
+        echo "Select resources to delete (use arrow keys to navigate, press Space to select, and press Enter to delete):"
+        while IFS= read -r -d '' resource; do
+            selected_resources+=("$resource")
+        done < <(fzf --multi --preview "echo {}")
+
+        if [[ ${#selected_resources[@]} -gt 0 ]]; then
+            local updated_resources=$(printf "\"%s\"\n" "${selected_resources[@]}" | jq -R . | jq -s .)
+            yq eval -i ''"$workspace_path"'["env-aux"][] |
+                select(.command == "'"$command"'") | .resources -= $updated_resources' $MY_WORKSPACES_SRC
+            echo "Selected resources deleted successfully from env-aux '$command' in workspace '$short_name'."
+        else
+            echo "No resources selected for deletion."
+        fi
+    else
+        echo "Invalid flag. Please specify either --all or --show."
+    fi
+}
+
+ws_env_aux_edit() {
+
+}
+
+# *pb*ws_show: Displays information about workspaces based on the provided command-line options.**
 #     Displays either all workspaces (--all), only workspace keys (--keys), or specific workspace details based on the short name (--key=<short-name>).
 #     Arguments:
 #         $1: Command-line option (--all, --keys, or --key=<short-name>)
@@ -192,6 +241,21 @@ __ws_add_env_aux_interactive() {
         done
     fi
     echo $new_workspace
+}
+
+# __ws_get_index: Retrieves the index of a workspace with the specified short name from the MY_WORKSPACES_SRC file.
+#     Searches for the workspace with the provided short name in the workspaces list and returns its index.
+#     Arguments:
+#         $1: Short name of the workspace
+#     Returns:
+#         Index of the workspace if found, otherwise displays an error message and returns 1
+__ws_get_index() {
+    local workspace_index=$(yq eval '.workspaces[] | select(.["short-name"] == "'"$1"'") | key' $MY_WORKSPACES_SRC)
+    if [[ -z "$workspace_index" || "$workspace_index" == "null" ]]; then
+        echo "Error: Workspace with short name '$1' does not exist." >&2
+        echo -1
+    fi
+    echo $workspace_index
 }
 
 # __ws_parse_new_val: Parses the new value for a property, considering the previous value.

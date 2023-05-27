@@ -1,10 +1,12 @@
 #!/bin/bash
+# In_Readme: Git Utils
 #
 # Title: Useful git and gh functions for semi-regular use
 # Description: A collection of functions to improve your work with git and gh
 # Author: Javi3Code
 # Date: Saturday May 20, 2023
 #
+
 ¡emptycommit() {
     git commit --allow-empty -m "$*"
 }
