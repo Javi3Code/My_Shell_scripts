@@ -81,40 +81,83 @@ ws_env_aux_delete() {
     local flag="$3"
     local workspace_index=$(__ws_get_index $short_name)
     local workspace_path=".workspaces[$workspace_index]"
-
-    if [[ "$flag" == "--all" ]]; then
-        yq eval -i 'del('"$workspace_path"'["env-aux"][] | select(.command == "'"$command"'"))' $MY_WORKSPACES_SRC
-        echo "Entire env-aux '$command' deleted successfully from workspace '$short_name'."
-    elif [[ "$flag" == "--show" ]]; then
-        local resources=$(yq eval ''"$workspace_path"'["env-aux"][] | select(.command == "'"$command"'").resources | .[]' $MY_WORKSPACES_SRC)
-        local selected_resources=()
-        local resource
-
-        echo "Resources for env-aux '$command' in workspace '$short_name':"
-        for resource in $resources; do
-            echo "- $resource"
-        done
-
-        echo "Select resources to delete (use arrow keys to navigate, press Space to select, and press Enter to delete):"
-        while IFS= read -r -d '' resource; do
-            selected_resources+=("$resource")
-        done < <(fzf --multi --preview "echo {}")
-
-        if [[ ${#selected_resources[@]} -gt 0 ]]; then
-            local updated_resources=$(printf "\"%s\"\n" "${selected_resources[@]}" | jq -R . | jq -s .)
-            yq eval -i ''"$workspace_path"'["env-aux"][] |
-                select(.command == "'"$command"'") | .resources -= $updated_resources' $MY_WORKSPACES_SRC
-            echo "Selected resources deleted successfully from env-aux '$command' in workspace '$short_name'."
-        else
-            echo "No resources selected for deletion."
-        fi
-    else
-        echo "Invalid flag. Please specify either --all or --show."
-    fi
+    local command_selector=''"$workspace_path"' ["env-aux"][] | select(.command == "'"$command"'")'
+    [[ -n $(yq eval $command_selector $MY_WORKSPACES_SRC) ]] && {
+        [[ "$flag" == "--all" ]] && {
+            yq eval -i 'del('"$command_selector"')' $MY_WORKSPACES_SRC
+            echo "Entire env-aux '$command' deleted successfully from workspace '$short_name'."
+        } || [[ "$flag" == "--show" ]] && {
+            local resources=$(yq eval ''"$command_selector"'.resources | .[]' $MY_WORKSPACES_SRC) &&
+                [[ -n $resources ]] && {
+                echo "Select resources to delete (use arrow keys to navigate, press Space to select, and press Enter to delete):"
+                local -a resources_array_copy=()
+                while IFS= read -r resource; do
+                    resources_array_copy+=("$resource")
+                done <<<"$resources"
+                echo $resources[@] | cat -n | awk '{$1=$1-1; print}' | __ws_fzf_prompt |
+                    {
+                        local -a selected_resources=($(awk '{print $1}' | sort -rn))
+                        for resource in "${selected_resources[@]}"; do
+                            [[ $resource -ge 0 ]] && {
+                                yq eval -i 'del('"$command_selector"'.resources['"$resource"'])' $MY_WORKSPACES_SRC
+                                echo -e "$resources_array_copy[$resource+1] has been deleted"
+                            } || echo "Error trying to delete $resources_array_copy[$resource+1]"
+                        done
+                    }
+            } || echo "Empty-Resources for env-aux '$command' in workspace '$short_name'"
+        } || echo "Invalid flag. Please specify either --all or --show."
+    } || echo "Env-aux '$command' doesn't exist"
 }
 
+# *pb*ws_env_aux_edit: Edits the env-aux of a workspace by adding resources.**
+#     Takes the workspace short name, env-aux command, and flag (--clip or --from-all-ws) as arguments.
+#     Flag --clip, adds the contents of the clipboard as a resource to the specified env-aux.
+#     Flag --from-all-ws, adds all the resources from other workspaces that are not already present in the specified env-aux.
+#     Arguments:
+#         $1: Short name of the workspace
+#         $2: Env-aux command
+#         $3: Flag (--clip or --from-all-ws)
+#     Returns:
+#         None
 ws_env_aux_edit() {
+    local short_name="$1"
+    local command="$2"
+    local flag="$3"
+    local workspace_index=$(__ws_get_index $short_name)
+    local env_aux_index=$(yq eval '.workspaces['"$workspace_index"'].["env-aux"][] | select(.command == "'"$command"'") | key' $MY_WORKSPACES_SRC)
+    [[ -z "$env_aux_index" || "$env_aux_index" == "null" ]] && {
+        echo "Error: Command '$command' does not exist in ws $short_name." >&2
+        return -1
+    } ||
+        {
+            [[ "$flag" == "--clip" ]] && {
+                local resource=$(xpaste)
+                echo -e "Do you want to add \n[ $resource ]"
+                read "response?to the workspace with short-name = $short_name and env-aux.command = $command? (Y/N):"
+                [[ "$response" =~ ^[Yy]$ ]] && {
+                    yq eval -i '.workspaces['"$workspace_index"'].["env-aux"]['"$env_aux_index"'].resources += ["'"$resource"'"]' $MY_WORKSPACES_SRC
+                    echo "Clipboard content has been added as a resource."
+                } || echo "Nothing has been added"
+            } || [[ "$flag" == "--from-all-ws" ]] && {
+                local resources=$(yq eval \
+                    '.workspaces[].["env-aux"][] | select(.command != "'"$command"'") | .resources[]' $MY_WORKSPACES_SRC) &&
+                    [[ -n $resources ]] && {
+                    echo "Select resources to delete (use arrow keys to navigate, press Space to select, and press Enter to delete):"
+                    echo $resources[@] | __ws_fzf_prompt |
+                        {
+                            local -a selected_resources=($(awk '{print $1}')) &&
+                                [[ -n "$selected_resources" ]] && {
+                                for res in $selected_resources; do
+                                    yq eval -i '.workspaces['"$workspace_index"'].["env-aux"]['"$env_aux_index"'].resources += ["'"$res"'"]' $MY_WORKSPACES_SRC &&
+                                        echo -e "Added resource:\n$res" ||
+                                        echo "Error trying to add resource ${res}"
+                                done
+                            } || echo "No resources selected"
+                        }
 
+                } || echo "Empty-Resources for selection"
+            } || echo "Invalid flag. Please specify either --clip or --from-all-ws."
+        } || echo "Env-aux '$command' doesn't exist"
 }
 
 # *pb*ws_show: Displays information about workspaces based on the provided command-line options.**
@@ -221,7 +264,7 @@ __ws_update_interactive() {
 __ws_add_env_aux_interactive() {
     read "add_env_aux?Do you want to add optional env-aux fields? (Y/N): "
     local new_workspace=$1
-    if [[ "$add_env_aux" =~ ^[Yy]$ ]]; then
+    [[ "$add_env_aux" =~ ^[Yy]$ ]] && {
         while true; do
             read "executor?Command: "
             read "resources?Resources (separated by commas): "
@@ -239,7 +282,7 @@ __ws_add_env_aux_interactive() {
                 break
             fi
         done
-    fi
+    }
     echo $new_workspace
 }
 
@@ -251,10 +294,10 @@ __ws_add_env_aux_interactive() {
 #         Index of the workspace if found, otherwise displays an error message and returns 1
 __ws_get_index() {
     local workspace_index=$(yq eval '.workspaces[] | select(.["short-name"] == "'"$1"'") | key' $MY_WORKSPACES_SRC)
-    if [[ -z "$workspace_index" || "$workspace_index" == "null" ]]; then
+    [[ -z "$workspace_index" || "$workspace_index" == "null" ]] && {
         echo "Error: Workspace with short name '$1' does not exist." >&2
         echo -1
-    fi
+    }
     echo $workspace_index
 }
 
@@ -266,9 +309,21 @@ __ws_get_index() {
 #     Returns:
 #         value
 __ws_parse_new_val() {
-    if [[ -z "$2" ]]; then
-        echo "$1"
-    else
-        echo "$2"
-    fi
+    [[ -z "$2" ]] && echo "$1" || echo "$2"
+}
+
+__ws_fzf_prompt() {
+    fzf -m \
+        --prompt='▶' --pointer='→' --marker='✔️' \
+        --height=60% \
+        --margin=6%,4%,4%,3% \
+        --border=rounded \
+        --color='dark,fg:green' \
+        --info=inline \
+        --layout=reverse-list \
+        --header='ctrl-c or ESC:quit | tab:select/deselect-one ctrl-a:select-all ctrl-d:deselect-all' \
+        --preview 'printf "%s\n" {+}' \
+        --bind='ctrl-a:select-all' \
+        --bind='ctrl-d:deselect-all' \
+        --preview-window=up:50%:wrap
 }
