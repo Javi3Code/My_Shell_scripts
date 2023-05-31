@@ -32,6 +32,40 @@ ws_register() {
     rm $workspaces_backup
 }
 
+ws_init() {
+    local workspace_json=$(yq eval -o=json '.workspaces[] | select(.["short-name"] == "'"$1"'" or .name == "'"$1"'") | { "short-name": .["short-name"], "path": .path, "env": .env}' "$MY_WORKSPACES_SRC" | envsubst)
+    echo $workspace_json
+    [[ -n "$workspace_json" ]] && {
+        local short_name=$(echo $workspace_json | jq -r '.["short-name"]')
+        local directory=$(echo $workspace_json | jq -r '.path')
+        local ide=$(echo $workspace_json | jq -r '.env')
+        [[ -n "$ide" && "$ide" != '.' ]] && {
+            $ide $directory
+        } || echo "Principal environment not initialized"
+        local args=("$2","$3")
+        [[ "${args[*]}" =~ "--non-cd" ]] || cd $directory
+        [[ "${args[*]}" =~ "--non-init-env-aux" ]] || ws_env_aux_init $1
+    }
+}
+ws_cd() {
+    local workspace_dir=$(yq eval '.workspaces[] | select(.["short-name"] == "'"$1"'") | .path' "$MY_WORKSPACES_SRC" | envsubst)
+    cd "$workspace_dir" || echo "Failed to cd to workspace directory: $workspace_dir"
+}
+
+ws_env_aux_init() {
+    local env_aux_json=$(yq eval -o=json '.workspaces[] | select(.["short-name"] == "'"$1"'") | .["env-aux"]' "$MY_WORKSPACES_SRC")
+    echo $env_aux_json
+    [[ -n "$env_aux_json" ]] && {
+        echo "Initializing env-aux for workspace: $1"
+        echo "$env_aux_json" | jq -c '.[]' | while IFS= read -r entry; do
+            local command=$(echo "$entry" | jq -r '.command')
+            local resources=($(echo "$entry" | jq -r '.resources[]'))
+            {$command $resources} >/dev/null 2>&1 &
+            disown || echo "Error trying to open env-aux"
+        done
+    } || echo "Workspace not found or env-aux not defined: $1"
+}
+
 # *pb*ws_edit: Edits properties of a workspace with the specified short name in the MY_WORKSPACES_SRC file.**
 #     Searches for the workspace with the provided short name in the workspaces list and allows the user to edit its
 # properties interactively.
