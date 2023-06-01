@@ -16,7 +16,7 @@ mysh_update_feats() {
                 feats+=("\n### [$title]($url)\n")
                 while IFS= read -r line; do
                     if echo "$line" | grep -q '^# \*pb\*'; then
-                        feats+=("\n✔️ **$(sed -E 's/# \*pb\*([^:]+):.*/\1/' <<<"$line")**: $(sed -E 's/# \*pb\*([^:]+):([^*]+)\*\*.*/\1: \2/' <<<"$line")\n")
+                        feats+=("\n✔️ **$(sed -E 's/# \*pb\*([^:]+):.*/\1/' <<<"$line")**: $(sed -E 's/# \*pb\*([^:]+):([^*]+)\*\*.*/\2/' <<<"$line")\n")
                     fi
                 done <"$file"
             }

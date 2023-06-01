@@ -59,31 +59,37 @@ $$ Features $$
  
 ### [Generic features](https://github.com/Javi3Code/My_Shell_scripts/blob/main/my_generic_fc.sh)
  
-✔️ **¡cleandw**: ¡cleandw:  Cleans the Downloads folder by removing all files and subdirectories within it.
+✔️ **¡cleandw**:  Cleans the Downloads folder by removing all files and subdirectories within it.
  
-✔️ **¡batch_zZmv**: ¡batch_zZmv:  Batch processes all the zip files in the Downloads folder.
+✔️ **¡batch_zZmv**:  Batch processes all the zip files in the Downloads folder.
  
-✔️ **¡zZmv**: ¡zZmv:  Moves and extracts a zip file to the target folder and then removes the original zip file.
+✔️ **¡zZmv**:  Moves and extracts a zip file to the target folder and then removes the original zip file.
  
-✔️ **¡symlnk**: ¡symlnk:  Creates symbolic links for all shell scripts and _completions directories in the specified directory to the Zsh configuration directory.
+✔️ **¡symlnk**:  Creates symbolic links for all shell scripts and _completions directories in the specified directory to the Zsh configuration directory.
  
-✔️ **¡shupdt**: ¡shupdt:  Updates the shell scripts in the Zsh configuration directory with the latest versions from MY_SH_DIR.
+✔️ **¡shupdt**:  Updates the shell scripts in the Zsh configuration directory with the latest versions from MY_SH_DIR.
  
-✔️ **¡open**: ¡open:  Opens a file or directory with Visual Studio Code or another specified program.
+✔️ **¡open**:  Opens a file or directory with Visual Studio Code or another specified program.
  
 ### [Workspaces Tool](https://github.com/Javi3Code/My_Shell_scripts/blob/main/my_workspaces.sh)
  
-✔️ **ws_register**: ws_register:  Registers a new workspace based on interactive user input.
+✔️ **ws_register**:  Registers a new workspace based on interactive user input.
  
-✔️ **ws_edit**: ws_edit:  Edits properties of a workspace with the specified short name in the MY_WORKSPACES_SRC file.
+✔️ **ws_init**:  Initializes a workspace by opening the specified IDE and navigating to the workspace directory.
  
-✔️ **ws_delete**: ws_delete:  Deletes a workspace with the specified short name from the MY_WORKSPACES_SRC file.
+✔️ **ws_cd**:  Changes the current directory to the workspace directory.
  
-✔️ **ws_env_aux_delete**: ws_env_aux_delete:  Deletes a specific env-aux or resource from a workspace.
+✔️ **ws_env_aux_init**:  Initializes the environment auxiliary resources for a workspace.
  
-✔️ **ws_env_aux_edit**: ws_env_aux_edit:  Edits the env-aux of a workspace by adding resources.
+✔️ **ws_edit**:  Edits properties of a workspace with the specified short name in the MY_WORKSPACES_SRC file.
  
-✔️ **ws_show**: ws_show:  Displays information about workspaces based on the provided command-line options.
+✔️ **ws_delete**:  Deletes a workspace with the specified short name from the MY_WORKSPACES_SRC file.
+ 
+✔️ **ws_env_aux_delete**:  Deletes a specific env-aux or resource from a workspace.
+ 
+✔️ **ws_env_aux_edit**:  Edits the env-aux of a workspace by adding resources.
+ 
+✔️ **ws_show**:  Displays information about workspaces based on the provided command-line options.
 
 ------
 

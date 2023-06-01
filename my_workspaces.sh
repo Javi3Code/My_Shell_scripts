@@ -28,10 +28,21 @@ ws_register() {
     cp $MY_WORKSPACES_SRC $workspaces_backup &&
         yq eval -i $new_workspace "$workspaces_backup" &&
         __validate_workspace $workspaces_backup &&
-        yq eval -i $new_workspace "$MY_WORKSPACES_SRC"
+        yq eval -i $new_workspace "$MY_WORKSPACES_SRC" &&
+        echo "Success!!"
     rm $workspaces_backup
 }
 
+# *pb*ws_init: Initializes a workspace by opening the specified IDE and navigating to the workspace directory.**
+#     Takes the workspace name or short name as an argument.
+#     Optionally accepts the "--non-cd" flag to prevent changing the current directory to the workspace directory.
+#     Optionally accepts the "--non-init-env-aux" flag to skip initializing the environment auxiliary resources.
+#     Arguments:
+#         $1: Workspace name or short name
+#         $2: Optional flag "--non-cd"
+#         $3: Optional flag "--non-init-env-aux"
+#     Returns:
+#         None
 ws_init() {
     local workspace_json=$(yq eval -o=json '.workspaces[] | select(.["short-name"] == "'"$1"'" or .name == "'"$1"'") | { "short-name": .["short-name"], "path": .path, "env": .env}' "$MY_WORKSPACES_SRC" | envsubst)
     echo $workspace_json
@@ -45,13 +56,28 @@ ws_init() {
         local args=("$2","$3")
         [[ "${args[*]}" =~ "--non-cd" ]] || cd $directory
         [[ "${args[*]}" =~ "--non-init-env-aux" ]] || ws_env_aux_init $1
-    }
+    } || echo "Init $1 Failed!!"
 }
+
+# *pb*ws_cd: Changes the current directory to the workspace directory.**
+#     Takes the workspace short name as an argument.
+#     Arguments:
+#         $1: Workspace short name
+#     Returns:
+#         None
 ws_cd() {
     local workspace_dir=$(yq eval '.workspaces[] | select(.["short-name"] == "'"$1"'") | .path' "$MY_WORKSPACES_SRC" | envsubst)
     cd "$workspace_dir" || echo "Failed to cd to workspace directory: $workspace_dir"
 }
 
+# *pb*ws_env_aux_init: Initializes the environment auxiliary resources for a workspace.**
+#     Takes the workspace short name as an argument.
+#     Reads the environment auxiliary JSON configuration from the workspace configuration file.
+#     Executes each environment auxiliary command with its associated resources in the background.
+#     Arguments:
+#         $1: Workspace short name
+#     Returns:
+#         None
 ws_env_aux_init() {
     local env_aux_json=$(yq eval -o=json '.workspaces[] | select(.["short-name"] == "'"$1"'") | .["env-aux"]' "$MY_WORKSPACES_SRC")
     echo $env_aux_json
@@ -85,7 +111,8 @@ ws_edit() {
     cp $MY_WORKSPACES_SRC $workspaces_backup &&
         yq eval -i $updated_workspace "$workspaces_backup" &&
         __validate_workspace $workspaces_backup &&
-        yq eval -i $updated_workspace "$MY_WORKSPACES_SRC"
+        yq eval -i $updated_workspace "$MY_WORKSPACES_SRC" &&
+        echo "Success!!"
     rm $workspaces_backup
 }
 
@@ -96,7 +123,9 @@ ws_edit() {
 #     Returns:
 #         None
 ws_delete() {
-    yq eval -i 'del(.workspaces['"$(__ws_get_index $1)"'])' $MY_WORKSPACES_SRC
+    yq eval -i 'del(.workspaces['"$(__ws_get_index $1)"'])' $MY_WORKSPACES_SRC &&
+        echo "Success!!" ||
+        echo "Failed!!"
 }
 
 # *pb*ws_env_aux_delete: Deletes a specific env-aux or resource from a workspace.**
@@ -346,6 +375,13 @@ __ws_parse_new_val() {
     [[ -z "$2" ]] && echo "$1" || echo "$2"
 }
 
+# __ws_fzf_prompt: Prompts the user to select one or more options using fzf.
+#     Uses fzf to display a list of options and allows the user to select/deselect options using various key bindings.
+#     Returns the selected options.
+#     Arguments:
+#         None
+#     Returns:
+#         Array of selected options
 __ws_fzf_prompt() {
     fzf -m \
         --prompt='▶' --pointer='→' --marker='✔️' \
@@ -361,3 +397,15 @@ __ws_fzf_prompt() {
         --bind='ctrl-d:deselect-all' \
         --preview-window=up:50%:wrap
 }
+
+__ws_get_short_names() {
+    local -a short_names=($(yq eval '.workspaces[] | "\"" + .short-name + "[" + '"$1"' + "]" + "\"" ' $MY_WORKSPACES_SRC))
+    local formatted_names=$(
+        IFS=' '
+        echo "${short_names[*]}"
+    )
+    echo -e "$formatted_names"
+}
+
+compdef ws_delete=ws_edit
+compdef ws_env_aux_edit=ws_edit
