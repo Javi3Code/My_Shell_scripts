@@ -1,0 +1,26 @@
+#compdef ws_env_aux_edit
+# Description: Completion script for ws_env_aux_edit @see(../my_workspaces.sh).
+# Author: Javi3Code
+# Date: Thursday Jun 1, 2023
+
+__workspaces() {
+    eval "_arguments $(__ws_get_short_names .description)"
+}
+
+__commands() {
+    local -a _commands=($(__ws_get_commands_by_short_name "$words[2]"))
+    eval "_values 'commands' $_commands"
+}
+
+__ws_env_aux_edit_command() {
+    _arguments '(--env-aux-command)'--env-aux-command='[Env-aux identifier]:_:__commands'
+}
+
+__ws_env_aux_edit_options() {
+    _arguments "--clip[Adds the contents of the clipboard as a resource to the specified env-aux]" \
+        "--from-all-ws[Adds all the resources from other workspaces that are not already present in the specified env-aux]"
+}
+_arguments \
+    '1:workspaces:__workspaces' \
+    '2:commands:__ws_env_aux_edit_command' \
+    '3:options:__ws_env_aux_edit_options'

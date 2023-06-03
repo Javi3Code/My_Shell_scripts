@@ -1,4 +1,5 @@
 #!/bin/bash
+# In_Readme: Generic features
 #
 # Title: Useful functions for semi-regular use
 # Description: A collection of useful functions for semi-regular use
@@ -12,13 +13,14 @@ export JAVA_HOME=~/.sdkman/candidates/java/current
 export MY_GH_REPO_DIR=~/dev-tools/projects
 export MY_SH_DIR=$MY_GH_REPO_DIR/shell_scripts
 export MY_DOWNLOADS_DIR=~/Descargas
+export MY_GH_SH_MAIN_URL=https://github.com/Javi3Code/My_Shell_scripts/blob/main
 # End const
 
 ¡nav() {
 
 }
 
-# ¡cleandw: Cleans the Downloads folder by removing all files and subdirectories within it.
+# *pb*¡cleandw: Cleans the Downloads folder by removing all files and subdirectories within it.**
 #     Arguments:
 #         None
 #     Returns:
@@ -27,8 +29,7 @@ export MY_DOWNLOADS_DIR=~/Descargas
     find $MY_DOWNLOADS_DIR -mindepth 1 -maxdepth 1 -exec rm -r {} +
 }
 
-# ¡batch_zZmv: Batch processes all the zip files in the Downloads folder.
-#     Moves and extracts each zip file to the specified target folder and then removes the original zip file.
+# *pb*¡batch_zZmv: Batch processes all the zip files in the Downloads folder.** Moves and extracts each zip file to the specified target folder and then removes the original zip file.
 #     Arguments:
 #         None
 #     Returns:
@@ -39,7 +40,7 @@ export MY_DOWNLOADS_DIR=~/Descargas
     done
 }
 
-# ¡zZmv: Moves and extracts a zip file to the target folder and then removes the original zip file.
+# *pb*¡zZmv: Moves and extracts a zip file to the target folder and then removes the original zip file.**
 #     Arguments:
 #         -t <target>: Target folder where the zip file will be extracted.
 #         -o <src>: Source folder where the zip file is located.
@@ -65,8 +66,7 @@ export MY_DOWNLOADS_DIR=~/Descargas
     7z x "$zipPathAbs" -o"$src" && mv "$src/${zipSrc%.*}" "$target" && rm "$zipPathAbs"
 }
 
-# ¡symlnk: Creates symbolic links for all shell scripts and _completions directories in the specified directory
-#     to the Zsh configuration directory.
+# *pb*¡symlnk: Creates symbolic links for all shell scripts and _completions directories in the specified directory to the Zsh configuration directory.**
 #     Arguments:
 #         None
 #     Returns:
@@ -86,7 +86,7 @@ export MY_DOWNLOADS_DIR=~/Descargas
     done <<<"$(find "$MY_SH_DIR" -type d -name "*_completions")"
 }
 
-# ¡shupdt: Updates the shell scripts in the Zsh configuration directory with the latest versions from MY_SH_DIR.
+# *pb*¡shupdt: Updates the shell scripts in the Zsh configuration directory with the latest versions from MY_SH_DIR.**
 #     Arguments:
 #         None
 #     Returns:
@@ -95,7 +95,7 @@ export MY_DOWNLOADS_DIR=~/Descargas
     find $MY_SH_DIR -type f -name "*.sh" -exec cp {} $EXT_SCRIPTS_DIR/ \;
 }
 
-# ¡open: Opens a file or directory with Visual Studio Code or another specified program.
+# *pb*¡open: Opens a file or directory with Visual Studio Code or another specified program.**
 #     Arguments:
 #         --zshrc: Opens the .zshrc file.
 #         --generics: Opens the my_generic_fc.sh file.

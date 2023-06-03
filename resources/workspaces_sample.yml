@@ -25,8 +25,3 @@ workspaces:
   description: aaaa
   path: /path/to/new/workspace
   env: code
-- name: a
-  short-name: a
-  description: a
-  path: a
-  env: a

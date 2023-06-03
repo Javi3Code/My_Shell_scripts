@@ -1,0 +1,11 @@
+#compdef ws_edit
+# Description: Completion script for ws_edit @see(../my_workspaces.sh).
+# Author: Javi3Code
+# Date: Thursday Jun 1, 2023
+#
+
+__workspaces() {
+    eval "_arguments $(__ws_get_short_names .description)"
+}
+_arguments \
+    '1:workspaces:__workspaces'
