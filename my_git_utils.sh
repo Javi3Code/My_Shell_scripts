@@ -1,12 +1,14 @@
 #!/bin/bash
+# In_Readme: Git Utils
 #
 # Title: Useful git and gh functions for semi-regular use
 # Description: A collection of functions to improve your work with git and gh
 # Author: Javi3Code
 # Date: Saturday May 20, 2023
 #
+
 ¡emptycommit() {
-    git commit --allow-empty -m "$@"
+    git commit --allow-empty -m "$*"
 }
 
 ¡setupstream_branch() {
@@ -42,29 +44,23 @@
             esac
             ;;
         esac
-        if [[ -n "$del_execution" ]]; then
+        [[ -n "$del_execution" ]] && {
             for delcmd in "${del_execution[@]}"; do
                 $delcmd $branch
             done
-        fi
+        }
     done
 }
 
 ¡backupbranch() {
     local backup="$(__actual_branch)-backup"
-    if [[ $1 == -sw ]]; then
-        git checkout -b $backup
-    else
-        git branch $backup
-    fi
+    [[ $1 == -sw ]] && git checkout -b $backup || git branch $backup
     echo "$backup has been created"
 }
 
 ¡orphanbranch() {
     git checkout --orphan $1
-    if [[ $2 == -r ]]; then
-        git rm -r --cached
-    fi
+    [[ $2 == -r ]] && git rm -r --cached
     echo "$1 has been created"
 }
 
