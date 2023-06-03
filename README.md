@@ -55,43 +55,52 @@ MY_DOWNLOADS_DIR=~/Descargas
 
 $$ Features $$
 
-### [Git Utils](https://github.com/Javi3Code/My_Shell_scripts/blob/main/git_utils.sh)
- 
 ### [Generic features](https://github.com/Javi3Code/My_Shell_scripts/blob/main/my_generic_fc.sh)
- 
+
 ✔️ **¡cleandw**:  Cleans the Downloads folder by removing all files and subdirectories within it.
- 
+
 ✔️ **¡batch_zZmv**:  Batch processes all the zip files in the Downloads folder.
- 
+
 ✔️ **¡zZmv**:  Moves and extracts a zip file to the target folder and then removes the original zip file.
- 
+
 ✔️ **¡symlnk**:  Creates symbolic links for all shell scripts and _completions directories in the specified directory to the Zsh configuration directory.
- 
+
 ✔️ **¡shupdt**:  Updates the shell scripts in the Zsh configuration directory with the latest versions from MY_SH_DIR.
- 
+
 ✔️ **¡open**:  Opens a file or directory with Visual Studio Code or another specified program.
- 
+
+### [Git Utils](https://github.com/Javi3Code/My_Shell_scripts/blob/main/my_git_utils.sh)
+
 ### [Workspaces Tool](https://github.com/Javi3Code/My_Shell_scripts/blob/main/my_workspaces.sh)
- 
+
 ✔️ **ws_register**:  Registers a new workspace based on interactive user input.
- 
+
 ✔️ **ws_init**:  Initializes a workspace by opening the specified IDE and navigating to the workspace directory.
- 
+
 ✔️ **ws_cd**:  Changes the current directory to the workspace directory.
- 
+
 ✔️ **ws_env_aux_init**:  Initializes the environment auxiliary resources for a workspace.
- 
+
 ✔️ **ws_edit**:  Edits properties of a workspace with the specified short name in the MY_WORKSPACES_SRC file.
- 
+
 ✔️ **ws_delete**:  Deletes a workspace with the specified short name from the MY_WORKSPACES_SRC file.
- 
+
 ✔️ **ws_env_aux_delete**:  Deletes a specific env-aux or resource from a workspace.
- 
+
 ✔️ **ws_env_aux_edit**:  Edits the env-aux of a workspace by adding resources.
- 
+
 ✔️ **ws_show**:  Displays information about workspaces based on the provided command-line options.
 
 ------
 
 # Release Notes
-Latest version 0.1.0: Files added/updated {[my_generic_fc.sh](https://github.com/Javi3Code/My_Shell_scripts/blob/main/my_generic_fc.sh)}
+## Latest version 0.2.0
+### Features added/updated:
+- [my_generic_fc.sh](https://github.com/Javi3Code/My_Shell_scripts/blob/main/my_generic_fc.sh)
+- [my_git_utils.sh](https://github.com/Javi3Code/My_Shell_scripts/blob/main/my_git_utils.sh)
+- Completed tool(v1) [my_workspaces.sh](https://github.com/Javi3Code/My_Shell_scripts/blob/main/my_workspaces.sh)
+- Arguments completions for my_generic_fc and my_workspaces
+
+## Version 0.1.0
+### Features added/updated:
+- [my_generic_fc.sh](https://github.com/Javi3Code/My_Shell_scripts/blob/main/my_generic_fc.sh)

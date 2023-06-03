@@ -1,4 +1,5 @@
 #compdef ws_init
+#
 # Description: Completion script for ws_init @see(../my_workspaces.sh).
 # Author: Javi3Code
 # Date: Thursday Jun 1, 2023

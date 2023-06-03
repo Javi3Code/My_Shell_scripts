@@ -1,5 +1,5 @@
-#compdef ws_edit
-# Description: Completion script for ws_edit @see(../my_workspaces.sh).
+#compdef ws_delete
+# Description: Completion script for ws_delete @see(../my_workspaces.sh).
 # Author: Javi3Code
 # Date: Thursday Jun 1, 2023
 #

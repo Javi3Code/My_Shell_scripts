@@ -7,7 +7,7 @@
 #
 
 #Init const
-MY_WORKSPACES_SRC=$MY_SH_DIR/resources/workspaces.yml
+export MY_WORKSPACES_SRC=~/dev-tools/projects/shell_scripts/resources/workspaces.yml
 # End const
 
 #=======================================================================================================================
@@ -134,13 +134,13 @@ ws_delete() {
 #     If the flag is "--show", displays all the resources for the specified env-aux and allows the user to select and delete resources interactively.
 #     Arguments:
 #         $1: Short name of the workspace
-#         $2: Env-aux command
+#         $2: --env-aux-command=command
 #         $3: Flag (--all or --show)
 #     Returns:
 #         None
 ws_env_aux_delete() {
     local short_name="$1"
-    local command="$2"
+    local command="${2#*=}"
     local flag="$3"
     local workspace_index=$(__ws_get_index $short_name)
     local workspace_path=".workspaces[$workspace_index]"
@@ -149,24 +149,26 @@ ws_env_aux_delete() {
         [[ "$flag" == "--all" ]] && {
             yq eval -i 'del('"$command_selector"')' $MY_WORKSPACES_SRC
             echo "Entire env-aux '$command' deleted successfully from workspace '$short_name'."
-        } || [[ "$flag" == "--show" ]] && {
-            local resources=$(yq eval ''"$command_selector"'.resources | .[]' $MY_WORKSPACES_SRC) &&
-                [[ -n $resources ]] && {
-                echo "Select resources to delete (use arrow keys to navigate, press Space to select, and press Enter to delete):"
-                local -a resources_array_copy=()
-                while IFS= read -r resource; do
-                    resources_array_copy+=("$resource")
-                done <<<"$resources"
-                echo $resources[@] | cat -n | awk '{$1=$1-1; print}' | __ws_fzf_prompt |
-                    {
-                        local -a selected_resources=($(awk '{print $1}' | sort -rn))
-                        for resource in "${selected_resources[@]}"; do
-                            [[ $resource -ge 0 ]] && {
-                                yq eval -i 'del('"$command_selector"'.resources['"$resource"'])' $MY_WORKSPACES_SRC
-                                echo -e "$resources_array_copy[$resource+1] has been deleted"
-                            } || echo "Error trying to delete $resources_array_copy[$resource+1]"
-                        done
-                    }
+        } || {
+            [[ "$flag" == "--show" ]] && {
+                local resources=$(yq eval ''"$command_selector"'.resources | .[]' $MY_WORKSPACES_SRC) &&
+                    [[ -n $resources ]] && {
+                    echo "Select resources to delete (use arrow keys to navigate, press Space to select, and press Enter to delete):"
+                    local -a resources_array_copy=()
+                    while IFS= read -r resource; do
+                        resources_array_copy+=("$resource")
+                    done <<<"$resources"
+                    echo $resources[@] | cat -n | awk '{$1=$1-1; print}' | __ws_fzf_prompt |
+                        {
+                            local -a selected_resources=($(awk '{print $1}' | sort -rn))
+                            for resource in "${selected_resources[@]}"; do
+                                [[ $resource -ge 0 ]] && {
+                                    yq eval -i 'del('"$command_selector"'.resources['"$resource"'])' $MY_WORKSPACES_SRC
+                                    echo -e "$resources_array_copy[$resource+1] has been deleted"
+                                } || echo "Error trying to delete $resources_array_copy[$resource+1]"
+                            done
+                        }
+                }
             } || echo "Empty-Resources for env-aux '$command' in workspace '$short_name'"
         } || echo "Invalid flag. Please specify either --all or --show."
     } || echo "Env-aux '$command' doesn't exist"
@@ -175,16 +177,17 @@ ws_env_aux_delete() {
 # *pb*ws_env_aux_edit: Edits the env-aux of a workspace by adding resources.**
 #     Takes the workspace short name, env-aux command, and flag (--clip or --from-all-ws) as arguments.
 #     Flag --clip, adds the contents of the clipboard as a resource to the specified env-aux.
-#     Flag --from-all-ws, adds all the resources from other workspaces that are not already present in the specified env-aux.
+#     Flag --from-all-ws, shows all the resources from other workspaces that are not already present in the specified env-aux.
 #     Arguments:
 #         $1: Short name of the workspace
-#         $2: Env-aux command
+#         $2: --env-aux-command=command
 #         $3: Flag (--clip or --from-all-ws)
 #     Returns:
 #         None
 ws_env_aux_edit() {
+    echo $*
     local short_name="$1"
-    local command="$2"
+    local command="${2#*=}"
     local flag="$3"
     local workspace_index=$(__ws_get_index $short_name)
     local env_aux_index=$(yq eval '.workspaces['"$workspace_index"'].["env-aux"][] | select(.command == "'"$command"'") | key' $MY_WORKSPACES_SRC)
@@ -201,23 +204,24 @@ ws_env_aux_edit() {
                     yq eval -i '.workspaces['"$workspace_index"'].["env-aux"]['"$env_aux_index"'].resources += ["'"$resource"'"]' $MY_WORKSPACES_SRC
                     echo "Clipboard content has been added as a resource."
                 } || echo "Nothing has been added"
-            } || [[ "$flag" == "--from-all-ws" ]] && {
-                local resources=$(yq eval \
-                    '.workspaces[].["env-aux"][] | select(.command != "'"$command"'") | .resources[]' $MY_WORKSPACES_SRC) &&
-                    [[ -n $resources ]] && {
-                    echo "Select resources to delete (use arrow keys to navigate, press Space to select, and press Enter to delete):"
-                    echo $resources[@] | __ws_fzf_prompt |
-                        {
-                            local -a selected_resources=($(awk '{print $1}')) &&
-                                [[ -n "$selected_resources" ]] && {
-                                for res in $selected_resources; do
-                                    yq eval -i '.workspaces['"$workspace_index"'].["env-aux"]['"$env_aux_index"'].resources += ["'"$res"'"]' $MY_WORKSPACES_SRC &&
-                                        echo -e "Added resource:\n$res" ||
-                                        echo "Error trying to add resource ${res}"
-                                done
-                            } || echo "No resources selected"
-                        }
-
+            } || {
+                [[ "$flag" == "--from-all-ws" ]] && {
+                    local resources=$(yq eval \
+                        '.workspaces[].["env-aux"][] | select(.command != "'"$command"'") | .resources[]' $MY_WORKSPACES_SRC) &&
+                        [[ -n $resources ]] && {
+                        echo "Select resources to add (use arrow keys to navigate, press Space to select, and press Enter to add):"
+                        echo $resources[@] | __ws_fzf_prompt |
+                            {
+                                local -a selected_resources=($(awk '{print $1}')) &&
+                                    [[ -n "$selected_resources" ]] && {
+                                    for res in $selected_resources; do
+                                        yq eval -i '.workspaces['"$workspace_index"'].["env-aux"]['"$env_aux_index"'].resources += ["'"$res"'"]' $MY_WORKSPACES_SRC &&
+                                            echo -e "Added resource:\n$res" ||
+                                            echo "Error trying to add resource ${res}"
+                                    done
+                                } || echo "No resources selected"
+                            }
+                    }
                 } || echo "Empty-Resources for selection"
             } || echo "Invalid flag. Please specify either --clip or --from-all-ws."
         } || echo "Env-aux '$command' doesn't exist"
@@ -259,8 +263,12 @@ __validate_workspace() {
 #     Returns:
 #         JSON representation of the new workspace
 __ws_register_interactive() {
-    read "name?Name: "
-    read "short_name?Short Name: "
+    while [[ ! $name =~ ^--.+ ]]; do
+        read "name?Name (Must start with '--'): "
+    done
+    while [[ ! $short_name =~ ^-.+ ]]; do
+        read "short_name?Short Name (Must start with '-'): "
+    done
     read "description?Description: "
     read "parentdir?Directory path (Insert '.' if none required): "
     read "ide?Runtime environment (Insert '.' if none required): "
@@ -294,8 +302,12 @@ __ws_update_interactive() {
     local short_name="$1"
     local workspace_path=".workspaces[$workspace_index]"
     local name=$(yq eval "$workspace_path.name" $MY_WORKSPACES_SRC)
-    read "new_name?Name [$name] (Press enter if you want to keep it the same): "
-    read "new_short_name?Short-Name [$short_name] (Press enter if you want to keep it the same): "
+    while [[ ! $name =~ ^--.+ ]]; do
+        read "new_name?Name [$name] (Must start with '--') (Press enter if you want to keep it the same): "
+    done
+    while [[ ! $short_name =~ ^-.+ ]]; do
+        read "new_short_name?Short-Name [$short_name] (Must start with '-') (Press enter if you want to keep it the same): "
+    done
     local description=$(yq eval "$workspace_path.description" $MY_WORKSPACES_SRC)
     read "new_description?Description [$description] (Press enter if you want to keep it the same): "
     local parentdir=$(yq eval "$workspace_path.path" $MY_WORKSPACES_SRC)
@@ -406,6 +418,11 @@ __ws_get_short_names() {
     )
     echo -e "$formatted_names"
 }
-
-compdef ws_delete=ws_edit
-compdef ws_env_aux_edit=ws_edit
+__ws_get_commands_by_short_name() {
+    local -a commands=($(yq eval '.workspaces[] | select(.short-name == "'"$1"'") | .env-aux[].command' $MY_WORKSPACES_SRC))
+    local formatted_commands=$(
+        IFS=' '
+        echo "${commands[*]}"
+    )
+    echo -e "$formatted_commands"
+}
