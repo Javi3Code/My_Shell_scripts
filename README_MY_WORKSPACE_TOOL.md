@@ -97,20 +97,18 @@ The workspace configuration file (`workspaces.yml`) stores the details of all re
 Example workspace object:
 
 ```yaml
-- name: My Workspace
-  short_name: my-ws
-  description: This is my workspace
-  directory: /path/to/workspace
-  ide: code
-  runtime_env: python
-  env_aux:
-    - command: npm install
-      resources:
-        - package.json
-        - package-lock.json
-    - command: pip install
-      resources:
-        - requirements.txt
+workspaces:
+- name: --shell
+  short-name: -sh
+  description: Workspace for working on shell plugins, bash scripting
+  path: $MY_SH_DIR
+  env: code
+  env-aux:
+  - command: google-chrome
+    resources:
+    - https://chat.openai.com/
+    - https://github.com/Javi3Code/dotfiles/pulls
+    - https://github.com/zsh-users/zsh-completions/tree/master
 ```
 
 Feel free to customize the configuration file and add more workspaces as needed.
