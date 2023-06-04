@@ -50,7 +50,6 @@ ws_register() {
 #         None
 ws_init() {
     local workspace_json=$(yq eval -o=json '.workspaces[] | select(.["short-name"] == "'"$1"'" or .name == "'"$1"'") | { "short-name": .["short-name"], "path": .path, "env": .env}' "$MY_WORKSPACES_SRC" | envsubst)
-    echo $workspace_json
     [[ -n "$workspace_json" ]] && {
         local short_name=$(echo $workspace_json | jq -r '.["short-name"]')
         local directory=$(echo $workspace_json | jq -r '.path')
@@ -85,7 +84,6 @@ ws_cd() {
 #         None
 ws_env_aux_init() {
     local env_aux_json=$(yq eval -o=json '.workspaces[] | select(.["short-name"] == "'"$1"'") | .["env-aux"]' "$MY_WORKSPACES_SRC")
-    echo $env_aux_json
     [[ -n "$env_aux_json" ]] && {
         echo "Initializing env-aux for workspace: $1"
         echo "$env_aux_json" | jq -c '.[]' | while IFS= read -r entry; do
@@ -111,7 +109,6 @@ ws_edit() {
     echo "Edit properties for workspace with shortname -> $short_name"
     local updated_workspace=$(__ws_update_interactive "$short_name")
     updated_workspace='.workspaces["'"$workspace_index"'"] = '$updated_workspace
-    echo -e ${updaded_workspace}
     local workspaces_backup=$MY_SH_DIR/resources/workspaces-backup.yml
     cp $MY_WORKSPACES_SRC $workspaces_backup &&
         yq eval -i $updated_workspace "$workspaces_backup" &&
