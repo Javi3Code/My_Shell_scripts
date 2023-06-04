@@ -5,6 +5,17 @@
 
 ## Usage
 
+### Start Tool
+Starts my_workspaces_tool.
+Run this command.
+```bash
+ ws_start
+```
+Result: create workspaces.yml @see my_workspaces.sh/$MY_WORKSPACES_SRC
+```yaml
+workspaces: []
+```
+
 ### Register a new workspace
 Registers a new workspace based on interactive user input. The script will prompt you to provide details such as the workspace name, short name, description, directory path, and runtime environment. You can also add optional environment auxiliary fields, including command and resources.
 

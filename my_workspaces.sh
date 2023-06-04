@@ -12,6 +12,11 @@ export MY_WORKSPACES_SRC=~/dev-tools/projects/shell_scripts/resources/workspaces
 
 #=======================================================================================================================
 
+# *pb*ws_start: Start my_wokspace_tool.**
+ws_start() {
+    echo 'workspaces: []' >$MY_WORKSPACES_SRC
+}
+
 # *pb*ws_register: Registers a new workspace based on interactive user input.**
 #     Reads input from the user for workspace details such as name, short name, description, directory path, and runtime environment.
 #     Offers the option to add optional env-aux fields, including command and resources.
