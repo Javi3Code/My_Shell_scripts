@@ -304,10 +304,10 @@ __ws_update_interactive() {
     local short_name="$1"
     local workspace_path=".workspaces[$workspace_index]"
     local name=$(yq eval "$workspace_path.name" $MY_WORKSPACES_SRC)
-    while [[ ! $name =~ ^--.+ ]]; do
+    while [[ ! $new_name =~ ^--.+ ]]; do
         read "new_name?Name [$name] (Must start with '--') (Press enter if you want to keep it the same): "
     done
-    while [[ ! $short_name =~ ^-.+ ]]; do
+    while [[ ! $new_short_name =~ ^-.+ ]]; do
         read "new_short_name?Short-Name [$short_name] (Must start with '-') (Press enter if you want to keep it the same): "
     done
     local description=$(yq eval "$workspace_path.description" $MY_WORKSPACES_SRC)
