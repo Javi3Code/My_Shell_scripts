@@ -96,7 +96,7 @@ $$ Features $$
 ------
 
 # Release Notes
-## Latest version 0.2.1
+## Latest version 0.2.2
 ### Features added/updated:
 - [my_generic_fc.sh](https://github.com/Javi3Code/My_Shell_scripts/blob/main/my_generic_fc.sh)
 ## Version 0.2.0
