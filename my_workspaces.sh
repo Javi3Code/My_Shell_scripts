@@ -306,9 +306,17 @@ __ws_update_interactive() {
     local name=$(yq eval "$workspace_path.name" $MY_WORKSPACES_SRC)
     while [[ ! $new_name =~ ^--.+ ]]; do
         read "new_name?Name [$name] (Must start with '--') (Press enter if you want to keep it the same): "
+        [[ $new_name == "" ]] &&
+            {
+                new_name=$name
+            }
     done
     while [[ ! $new_short_name =~ ^-.+ ]]; do
         read "new_short_name?Short-Name [$short_name] (Must start with '-') (Press enter if you want to keep it the same): "
+        [[ $new_short_name == "" ]] &&
+            {
+                new_short_name=$short_name
+            }
     done
     local description=$(yq eval "$workspace_path.description" $MY_WORKSPACES_SRC)
     read "new_description?Description [$description] (Press enter if you want to keep it the same): "
